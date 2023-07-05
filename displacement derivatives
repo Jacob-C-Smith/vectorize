@@ -1,0 +1,24 @@
+COMPUTE DISPLACEMENT DERIVATIVES
+
+IN[FORCE:vec3_f32, ACCELERATION:vec3_f32, VELOCITY:vec3_f32, POSITION:vec3_f32]
+OUT[ACCELERATION:vec3_f 32, VELOCITY:vec3_f32, POSITION:vec3_f32]
+VAR[DELTA_TIME:f32, DIR:vec3_f32, MASS:f32 GRAVITY:vec3_f32=<0.0, 0.0, -9.8>,HALF:f32=0.5]
+
+ENTRY:
+    <= DIV(FORCE, MASS)          ; DIV IN[0] , VAR[2]  ; 0110 0100 0010 0010
+    ACCELERATION <= _            ; STR OUT[0], CONTEXT ; 1100 1000 0000 0000 
+
+    <= MUL(DELTA_TIME, HALF)     ; MUL VAR[0], VAR[4]  ; 0100 1100 0011 0100
+    <= MUL(ACC, _)               ; MUL IN[1] , CONTEXT ; 0100 0100 0100 0000
+    <= ADD(VELOCITY, _)          ; ADD IN[2] , CONTEXT ; 0100 0100 1000 0000
+    VELOCITY <= _                ; STR OUT[1], CONTEXT ; 1100 1000 0100 0000
+    ;<= MUL(VELOCITY, DELTA_TIME) ;
+    ;<= MUL(DIR, _)               ;
+    ;<= ADD(POSITION, _)          ;
+    ;POSITION <= _                ;
+    ;<= MUL(DELTA_TIME, HALF)     ;
+    ;<= MUL(ACC, _)               ;
+    ;<= ADD(VELOCITY, _)          ;
+    ;VELOCITY <= _                ;
+
+    EXIT
