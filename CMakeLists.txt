@@ -1,5 +1,11 @@
 ﻿cmake_minimum_required (VERSION 3.26)
 
+IF(WIN32)
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT win64)
+ELSE()
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
+ENDIF(WIN32)
+
 project ("vectorize" ASM_NASM C)
 
 set(CMAKE_NASM_LINK_EXECUTABLE "ld <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
@@ -29,32 +35,11 @@ set_source_files_properties("vectorize sse2.asm" PROPERTIES LANGUAGE ASM_NASM)
 # Add source to this project's executable.
 add_executable (vectorize_example "main.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm") # "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm"
 target_include_directories(vectorize_example PUBLIC "include")
-IF(WIN32)
-set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT win64)
-
-ELSEIF(LINUX)
-    set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT elf64)
-ELSEIF(APPLE)
-
-ENDIF(WIN32)
 
 # Add source to the tester
 add_executable (vectorize_test "vectorize test.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm") # "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm"
 target_include_directories(vectorize_test PUBLIC "include")
-IF(WIN32)
-set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT win64)
-
-ELSEIF(LINUX)
-    set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT elf64)
-ELSEIF(APPLE)
-
-ENDIF(WIN32)
 
 # Add source to this project's library
 add_library (vectorize SHARED "vectorize.c" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm" "vectorize sse42.asm" "vectorize sse2.asm")
 target_include_directories(vectorize PUBLIC include include/vectorize)
-IF(WIN32)
-    set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT win64)
-ELSE()
-    set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT elf64)
-ENDIF(WIN32)
