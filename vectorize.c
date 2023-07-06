@@ -1309,26 +1309,8 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
             .pfn_shr = p_shr_best,
             .pfn_shl = p_shl_best
         },
-        .conversion_functions = (size_t (*[6][6])(void *, void *)) { 0 },
-        .operation_functions = (size_t (*[16])(void *, void *, void *))
-        {
-            p_add_best,
-            p_sub_best,
-            p_mul_best,
-            p_div_best,
-            p_rcp_best,
-            p_sqt_best,
-            p_str_best,
-            p_end_best,
-            p_rsq_best,
-            p_max_best,
-            p_min_best,
-            p_and_best,
-            p_orr_best,
-            p_xor_best,
-            p_shr_best,
-            p_shl_best
-        }
+        .conversion_functions = 0,
+        .operation_functions = 0
     };
 
     p_machine->conversion_functions[0][0] = 0;
@@ -1372,6 +1354,25 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
     p_machine->conversion_functions[5][3] = p_f64_i64_best;
     p_machine->conversion_functions[5][4] = p_f64_f32_best;
     p_machine->conversion_functions[5][5] = 0;
+
+    p_machine->operation_functions[0]  = p_add_best;
+    p_machine->operation_functions[1]  = p_sub_best;
+    p_machine->operation_functions[2]  = p_mul_best;
+    p_machine->operation_functions[3]  = p_div_best;
+    p_machine->operation_functions[4]  = p_rcp_best;
+    p_machine->operation_functions[5]  = p_sqt_best;
+    p_machine->operation_functions[6]  = p_str_best;
+    p_machine->operation_functions[7]  = p_end_best;
+    p_machine->operation_functions[8]  = p_rsq_best;
+    p_machine->operation_functions[9]  = p_max_best;
+    p_machine->operation_functions[10] = p_min_best;
+    p_machine->operation_functions[11] = p_and_best;
+    p_machine->operation_functions[12] = p_orr_best;
+    p_machine->operation_functions[13] = p_xor_best;
+    p_machine->operation_functions[14] = p_shr_best;
+    p_machine->operation_functions[15] = p_shl_best;
+    
+    
     // Success
     return 1;
 }
