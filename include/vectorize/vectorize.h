@@ -20,7 +20,7 @@
 #undef NDEBUG
 
 // Build with AVX2
-#define VECTORIZE_BUILD_WITH_SSE42
+#define VECTORIZE_BUILD_WITH_AVX2
 
 // Platform dependent macros
 #ifdef _WIN64
