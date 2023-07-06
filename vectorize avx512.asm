@@ -89,19 +89,19 @@ global machine_add_u8_avx512
 machine_add_u8_avx512:
 
     ; Load A
-    vmovaps zmm1, zword [rdx] ; zmm1 <= rdx (a)
+    ;vmovaps zmm1, zword [rdx] ; zmm1 <= rdx (a)
 
     ; Load B
-    vmovaps zmm2, zword [r8] ; zmm2 <= r8 (b)
+    ;vmovaps zmm2, zword [r8] ; zmm2 <= r8 (b)
 
     ; vec A + vec B as packed 8-bit values
-    vpaddb zmm0, zmm2, zmm1  ; zmm0 <= zmm1 + zmm2 (a + b)
+    ;vpaddb zmm0, zmm2, zmm1  ; zmm0 <= zmm1 + zmm2 (a + b)
 
     ; Store the result of the add operation at the return pointer
-    vmovaps zword [rcx], zmm0 ; rcx <= zmm0 
+    ;vmovaps zword [rcx], zmm0 ; rcx <= zmm0 
 
     ; Success
-    mov rax, 64
+    ;mov rax, 64
     
     ; Return
     ret
@@ -113,19 +113,19 @@ global machine_sub_u8_avx512
 machine_sub_u8_avx512:
 
     ; Load A
-    vmovaps zmm1, zword [r8] ; zmm1 <= rcx (a)
+    ;vmovaps zmm1, zword [r8] ; zmm1 <= rcx (a)
 
     ; Load B
-    vmovaps zmm2, zword [rdx] ; zmm2 <= rdx (b)
+    ;vmovaps zmm2, zword [rdx] ; zmm2 <= rdx (b)
 
     ; vec A - vec B as packed 8-bit values
-    vpsubb zmm0, zmm2, zmm1  ; zmm0 <= zmm1 + zmm2 (a - b)
+    ;vpsubb zmm0, zmm2, zmm1  ; zmm0 <= zmm1 + zmm2 (a - b)
     
     ; Store the result of the add operation at the return pointer
-    vmovaps zword [rcx], zmm0 ; rcx <= zmm0 
+    ;vmovaps zword [rcx], zmm0 ; rcx <= zmm0 
 
     ; Success
-    mov rax, 64
+    ;mov rax, 64
     
     ; Return
     ret
