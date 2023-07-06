@@ -54,10 +54,7 @@ ENDIF(WIN32)
 add_library (vectorize SHARED "vectorize.c" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm" "vectorize sse42.asm" "vectorize sse2.asm")
 target_include_directories(vectorize PUBLIC include include/vectorize)
 IF(WIN32)
-set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT win64)
-
-ELSEIF(LINUX)
+    set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT win64)
+ELSE()
     set_target_properties(vectorize_example PROPERTIES NASM_OBJ_FORMAT elf64)
-ELSEIF(APPLE)
-
 ENDIF(WIN32)
