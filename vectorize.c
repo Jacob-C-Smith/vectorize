@@ -1309,15 +1309,7 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
             .pfn_shr = p_shr_best,
             .pfn_shl = p_shl_best
         },
-        .conversion_functions = (size_t (*[6][6])(void *, void *))
-        {
-            (size_t (*[6])(void *, void *)){ 0            , p_i8_i16_best , p_i8_i32_best , p_i8_i64_best , p_i8_f32_best , p_i8_f64_best  },
-            (size_t (*[6])(void *, void *)){ p_i16_i8_best, 0             , p_i16_i32_best, p_i16_i64_best, p_i16_f32_best, p_i16_f64_best },
-            (size_t (*[6])(void *, void *)){ p_i32_i8_best, p_i32_i16_best, 0             , p_i32_i64_best, p_i32_f32_best, p_i32_f64_best },
-            (size_t (*[6])(void *, void *)){ p_i64_i8_best, p_i64_i16_best, p_i64_i32_best, 0             , p_i64_f32_best, p_i64_f64_best },
-            (size_t (*[6])(void *, void *)){ p_f32_i8_best, p_f32_i16_best, p_f32_i32_best, p_f32_i64_best, 0             , p_f32_f64_best },
-            (size_t (*[6])(void *, void *)){ p_f64_i8_best, p_f64_i16_best, p_f64_i32_best, p_f64_i64_best, p_f64_f32_best, 0              }
-        },
+        .conversion_functions = (size_t (*[6][6])(void *, void *)) { 0 },
         .operation_functions = (size_t (*[16])(void *, void *, void *))
         {
             p_add_best,
@@ -1339,6 +1331,47 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
         }
     };
 
+    p_machine->conversion_functions[0][0] = 0;
+    p_machine->conversion_functions[0][1] = p_i8_i16_best;
+    p_machine->conversion_functions[0][2] = p_i8_i32_best;
+    p_machine->conversion_functions[0][3] = p_i8_i64_best;
+    p_machine->conversion_functions[0][4] = p_i8_f32_best;
+    p_machine->conversion_functions[0][5] = p_i8_f64_best;
+
+    p_machine->conversion_functions[1][0] = p_i16_i8_best;
+    p_machine->conversion_functions[1][1] = 0;
+    p_machine->conversion_functions[1][2] = p_i16_i32_best;
+    p_machine->conversion_functions[1][3] = p_i16_i64_best;
+    p_machine->conversion_functions[1][4] = p_i16_f32_best;
+    p_machine->conversion_functions[1][5] = p_i16_f64_best;
+
+    p_machine->conversion_functions[2][0] = p_i32_i8_best;
+    p_machine->conversion_functions[2][1] = p_i32_i16_best;
+    p_machine->conversion_functions[2][2] = 0;
+    p_machine->conversion_functions[2][3] = p_i32_i64_best;
+    p_machine->conversion_functions[2][4] = p_i32_f32_best;
+    p_machine->conversion_functions[2][5] = p_i32_f64_best;
+
+    p_machine->conversion_functions[3][0] = p_i64_i8_best;
+    p_machine->conversion_functions[3][1] = p_i64_i16_best;
+    p_machine->conversion_functions[3][2] = p_i64_i32_best;
+    p_machine->conversion_functions[3][3] = 0;
+    p_machine->conversion_functions[3][4] = p_i64_f32_best;
+    p_machine->conversion_functions[3][5] = p_i64_f64_best;
+
+    p_machine->conversion_functions[4][0] = p_f32_i8_best;
+    p_machine->conversion_functions[4][1] = p_f32_i16_best;
+    p_machine->conversion_functions[4][2] = p_f32_i32_best;
+    p_machine->conversion_functions[4][3] = p_f32_i64_best;
+    p_machine->conversion_functions[4][4] = 0;
+    p_machine->conversion_functions[4][5] = p_f32_f64_best;
+
+    p_machine->conversion_functions[5][0] = p_f64_i8_best;
+    p_machine->conversion_functions[5][1] = p_f64_i16_best;
+    p_machine->conversion_functions[5][2] = p_f64_i32_best;
+    p_machine->conversion_functions[5][3] = p_f64_i64_best;
+    p_machine->conversion_functions[5][4] = p_f64_f32_best;
+    p_machine->conversion_functions[5][5] = 0;
     // Success
     return 1;
 }
