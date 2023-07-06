@@ -19,7 +19,7 @@ int main(int argc, const char* argv[])
     (void)putchar('\n');
 
     // Start the machine
-    (void)machine_start(&_machine);
+    (void)machine_run(&_machine);
 
     // Success
     return EXIT_SUCCESS;

@@ -62,6 +62,16 @@ enum operand_type_e
     VECTORIZE_OPERAND_TYPE_VAR     = 3
 };
 
+enum data_stream_format_e
+{
+    VECTORIZE_FORMAT_8   = 0, // 8-bit int 
+    VECTORIZE_FORMAT_16  = 1, // 16-bit int
+    VECTORIZE_FORMAT_32  = 2, // 32-bit int
+    VECTORIZE_FORMAT_64  = 3, // 64-bit int
+    VECTORIZE_FORMAT_F32 = 4, // 32-bit floating point
+    VECTORIZE_FORMAT_F64 = 5  // 64-bit floating point
+};
+
 // Forward definitions
 struct instruction_s;
 struct program_s;
@@ -108,11 +118,12 @@ struct instruction_s
 // Data stream
 struct data_stream_s
 {
-    void   *data;
-    size_t  size_in_bytes,
-            size,
-            stride;
-    bool    constant;
+    void                      *data;
+    bool                       constant;
+    size_t                     size_in_bytes,
+                               size,
+                               stride;
+    enum data_stream_format_e  format;
 };
 
 // Machine 
@@ -146,16 +157,18 @@ struct machine_s
         size_t (*pfn_shl)(void *p_result, void *a, void *b);
     } operation;
 
-    data_stream *data[4];
+    size_t (*operation_functions[16])(void *p_result, void *a, void *b);
+
+    size_t (*conversion_functions[6][6])(void *, void *);
+
+    data_stream *context;
+    
+    data_stream data[4][8];
     
     size_t buf_len,
            index;
 
     bool is_running;
-
-    data_stream *context;
-
-    machine *p_next;
 };
 
 DLLEXPORT int  instruction_decode ( instruction *p_instruction, u16 instruction_bin );
@@ -166,6 +179,10 @@ DLLEXPORT void instruction_print ( instruction _instruction );
 
 DLLEXPORT int  data_stream_load ( data_stream *p_data_stream, const char *path );
 
+//DLLEXPORT int  data_stream_write ( data_stream *p_data_stream, const char *path );
+
+DLLEXPORT int data_stream_read ( data_stream *p_data_stream, enum data_stream_format_e format, size_t items, void *ret );
+
 DLLEXPORT int  machine_load_program ( machine *p_machine, char *path, char *in_0, char *out_0 );
 
 DLLEXPORT int  machine_print_program ( machine _machine );
@@ -174,4 +191,4 @@ DLLEXPORT int  machine_add ( machine *p_machine, data_stream *p_a, data_stream *
 
 DLLEXPORT int  machine_tick ( machine *p_machine );
 
-DLLEXPORT int  machine_start ( machine *p_machine );
+DLLEXPORT int  machine_run ( machine *p_machine );

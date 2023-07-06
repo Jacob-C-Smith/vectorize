@@ -312,7 +312,11 @@ machine_add_u64_avx2:
 
 .end:
 
-; Add single precision floating point values
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Single precision floating point operations ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Add 32-bit floats
 global machine_add_f32_avx2
 machine_add_f32_avx2:
 
@@ -333,7 +337,72 @@ machine_add_f32_avx2:
 
 .end:
 
-; Add double precision floating point values
+; Sub 32-bit floats
+global machine_sub_f32_avx2
+machine_sub_f32_avx2:
+
+    ; Load A
+    vmovaps ymm1, yword [rcx] ; ymm1 <= rcx (a)
+
+    ; Load B
+    vmovaps ymm2, yword [rdx] ; ymm2 <= rdx (b)
+
+    ; Sub A - B as packed single precision floating point values
+    vsubps ymm0, ymm2, ymm1  ; ymm0 <= ymm1 - ymm2 (a - b)
+    
+    ; Success
+    mov rax, 32
+    
+    ; Return
+    ret
+
+.end:
+
+; Mul 32-bit floats
+global machine_mul_f32_avx2
+machine_mul_f32_avx2:
+
+    ; Load A
+    vmovaps ymm1, yword [rcx] ; ymm1 <= rcx (a)
+
+    ; Load B
+    vmovaps ymm2, yword [rdx] ; ymm2 <= rdx (b)
+
+    ; Mul A * B as packed single precision floating point values
+    vmulps ymm0, ymm2, ymm1  ; ymm0 <= ymm1 * ymm2 (a * b)
+    
+    ; Success
+    mov rax, 32
+    
+    ; Return
+    ret
+
+.end:
+
+; Div 32-bit floats
+global machine_div_f32_avx2
+machine_div_f32_avx2:
+
+    ; Load A
+    vmovaps ymm1, yword [rcx] ; ymm1 <= rcx (a)
+
+    ; Load B
+    vmovaps ymm2, yword [rdx] ; ymm2 <= rdx (b)
+
+    ; Div A + B as packed single precision floating point values
+    vdivps ymm0, ymm2, ymm1  ; ymm0 <= ymm1 + ymm2 (a + b)
+    
+    ; Success
+    mov rax, 32
+    
+    ; Return
+    ret
+
+.end:
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Double precision floating point operations ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 global machine_add_f64_avx2
 machine_add_f64_avx2:
 

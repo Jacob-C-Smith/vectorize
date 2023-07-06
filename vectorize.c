@@ -259,7 +259,11 @@
     //////////////
     // Integral //
     //////////////
-    
+
+    ////////////////
+    // Operations //
+    ////////////////
+
     // add
     size_t machine_add_u8_  ( void *p_result, void *a, void *b ); 
     size_t machine_add_u16_ ( void *p_result, void *a, void *b );
@@ -364,15 +368,56 @@
     // shr
 
     // shl
+    
+    /////////////////
+    // Conversions //
+    /////////////////
 
+    // 8-bit -> X
+    size_t machine_conv_8_16_    ( void *p_result, void *a );
+    size_t machine_conv_8_32_    ( void *p_result, void *a );
+    size_t machine_conv_8_64_    ( void *p_result, void *a );
+    size_t machine_conv_8_f32_   ( void *p_result, void *a );
+    size_t machine_conv_8_f64_   ( void *p_result, void *a );
 
-    extern size_t machine_sub_u8_ ( void *p_result, void *a, void *b ); 
-    extern size_t machine_and_u8_ ( void *p_result, void *a, void *b ); 
-    extern size_t machine_orr_u8_ ( void *p_result, void *a, void *b ); 
-    extern size_t machine_xor_u8_ ( void *p_result, void *a, void *b ); 
+    // 16-bit -> X
+    size_t machine_conv_16_8_    ( void *p_result, void *a );
+    size_t machine_conv_16_32_   ( void *p_result, void *a );
+    size_t machine_conv_16_64_   ( void *p_result, void *a );
+    size_t machine_conv_16_f32_  ( void *p_result, void *a );
+    size_t machine_conv_16_f64_  ( void *p_result, void *a );
+
+    // 32-bit -> X
+    size_t machine_conv_32_8_    ( void *p_result, void *a );
+    size_t machine_conv_32_16_   ( void *p_result, void *a );
+    size_t machine_conv_32_64_   ( void *p_result, void *a );
+    size_t machine_conv_32_f32_  ( void *p_result, void *a );
+    size_t machine_conv_32_f64_  ( void *p_result, void *a );
+
+    // 64-bit -> X
+    size_t machine_conv_64_8_    ( void *p_result, void *a );
+    size_t machine_conv_64_16_   ( void *p_result, void *a );
+    size_t machine_conv_64_32_   ( void *p_result, void *a );
+    size_t machine_conv_64_f32_  ( void *p_result, void *a );
+    size_t machine_conv_64_f64_  ( void *p_result, void *a );
+
+    // 32-bit -> X
+    size_t machine_conv_f32_8_   ( void *p_result, void *a );
+    size_t machine_conv_f32_16_  ( void *p_result, void *a );
+    size_t machine_conv_f32_32_  ( void *p_result, void *a );
+    size_t machine_conv_f32_64_  ( void *p_result, void *a );
+    size_t machine_conv_f32_f64_ ( void *p_result, void *a );
+
+    // 64-bit -> X
+    size_t machine_conv_f64_8_   ( void *p_result, void *a );
+    size_t machine_conv_f64_16_  ( void *p_result, void *a );
+    size_t machine_conv_f64_32_  ( void *p_result, void *a );
+    size_t machine_conv_f64_64_  ( void *p_result, void *a );
+    size_t machine_conv_f64_f32_ ( void *p_result, void *a );
+
 #endif
 
-size_t load_file ( const char *path, void *buffer, bool binary_mode )
+size_t load_file ( const char *path , void *buffer , bool binary_mode )
 {
 
     // Argument checking 
@@ -482,7 +527,7 @@ int instruction_decode ( instruction *p_instruction, u16 instruction_bin )
     }
 }
 
-int instruction_encode( u16 *p_instruction_bin, instruction _instruction )
+int instruction_encode ( u16 *p_instruction_bin, instruction _instruction )
 {
 
     // Argument check
@@ -520,7 +565,7 @@ int instruction_encode( u16 *p_instruction_bin, instruction _instruction )
     }
 }
 
-void instruction_print( instruction _instruction )
+void instruction_print ( instruction  _instruction )
 {
 
     // Switch on the type of the instruction
@@ -646,34 +691,183 @@ int data_stream_load ( data_stream *p_data_stream, const char *path )
     return 1;
 }
 
+int data_stream_read ( data_stream *p_data_stream, enum data_stream_format_e format, size_t items, void *ret )
+{
+
+    //void (*pfn_conv_func)()= 0;
+
+    // Success
+    return 1;
+}
+
 int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out_0 )
 {
 
+    /* 
+     * ////////////////
+     * // Commentary //
+     * ////////////////
+     * 
+     * Machines run programs. Programs are lists of instructions. Instructions are encoded as words.
+     * The encoding is described below
+     * 
+     * /////////////////
+     * // Instruction //
+     * /////////////////
+     *
+     *  This graphic shows the bits of an opcode word
+     * 
+     * ╭────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────╮
+     * │ 16 │ 15 │ 14 │ 13 │ 12 │ 11 │ 10 │ 9  │ 8  │ 7  │ 6  │ 5  │ 4  │ 3  │ 2  │ 1  │ 0  │
+     * ╰─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──╯
+     *   ├────┴────┴────╯    │    │    │    │    │    │    │    │    │    │    │    │    │
+     *   │                   │    │    │    │    │    │    │    │    │    │    │    │    │
+     *   │    ╭──────────────┴────╯    │    │    │    │    ╰────┤    │    │    │    │    │
+     *   │    │    ╭───────────────────┴────┴────┴────╯         │    │    │    │    │    │
+     *   │    │    │                                            │    │    │    │    │    │
+     *   │    │    │                                            │    ╰────┴────┴────┴────┴────╮
+     *   │    │    │                                            ╰───────────╮                 │
+     *   │    │  ╭─┴───────────────╮                                      ╭─┴───────────────╮ │ 
+     *   │    │  │ INDEX : 0 - 7   │                                      │ INDEX : 0 - 7   │ │ 
+     *   │    │  ├─────────────────┤ ╭────────────────┬─────────────────╮ ├─────────────────┤ │ 
+     *   │    │  │ Opcode 1 index  │ │ ADD = 0000 (0) │ RSQ = 1000 (8)  │ │ Opcode 2 index  │ │ 
+     *   │    │  ╰─────────────────╯ │ SUB = 0001 (1) │ MAX = 1001 (9)  │ ╰─────────────────╯ │ 
+     *   │    │                      │ MUL = 0010 (2) │ MIN = 1010 (10) │                     │ 
+     *   │  ╭─┴──────────────────╮   │ DIV = 0011 (3) │ AND = 1011 (11) │  ╭──────────────────┴─╮
+     *   │  │ CONTEXT = 0000 (0) │   │ RCP = 0100 (4) │ OR  = 1100 (12) │  │ CONTEXT = 0000 (0) │
+     *   │  │ IN      = 0001 (1) │   │ SQR = 0101 (5) │ XOR = 1111 (13) │  │ IN      = 0001 (1) │
+     *   │  │ OUT     = 0010 (2) │   │ STR = 0110 (6) │ SHR = 1110 (14) │  │ VAR     = 0011 (3) │
+     *   │  │ VAR     = 0011 (3) │   │ END = 0111 (7) │ SHL = 1101 (15) │  ├────────────────────┤
+     *   │  ├────────────────────┤   ├────────────────┴─────────────────┤  │   Opcode 2 types   │
+     *   │  │   Opcode 1 types   │   │         Operation codes          │  ╰────────────────────╯
+     *   │  ╰────────────────────╯   ╰────────────────┼─────────────────╯                        
+     *   │                                            │
+     *   ╰────────────────────────────────────────────╯
+     * 
+     * ////////////////
+     * // Conversion //
+     * ////////////////
+     * 
+     * These conversions are run on buffer reads / writes
+     * 
+     * // TODO: Make sure FRM/TO is not TO/FRM
+     * 
+     * ╭────────┬───────┬───────┬────────┬────────┬────────┬────────╮
+     * │ FRM/TO │ BYTE  │ WORD  │ DWORD  │ QWORD  │ SINGLE │ DOUBLE │
+     * ├────────┼───────┼───────┼────────┼────────┼────────┼────────┤
+     * │ BYTE   │ NULL  │ B->W  │ B->DW  │ B->QW  │ B->SF  │ B->DF  │
+     * ├────────┼───────┼───────┼────────┼────────┼────────┼────────┤
+     * │ WORD   │ W->B  │ NULL  │ W->DW  │ W->QW  │ W->SF  │ W->DF  │
+     * ├────────┼───────┼───────┼────────┼────────┼────────┼────────┤
+     * │ DWORD  │ DW->B │ DW->W │ NULL   │ DW->QW │ DW->SF │ DW->DF │
+     * ├────────┼───────┼───────┼────────┼────────┼────────┼────────┤
+     * │ QWORD  │ QW->B │ QW->W │ QW->DW │ NULL   │ QW->SF │ QW->DF │
+     * ├────────┼───────┼───────┼────────┼────────┼────────┼────────┤
+     * │ SINGLE │ SF->B │ SF->W │ SF->DW │ SF->QW │ NULL   │ SF->DF │
+     * ├────────┼───────┼───────┼────────┼────────┼────────┼────────┤
+     * │ DOUBLE │ DF->B │ DF->W │ DF->DW │ DF->QW │ DF->SF │ NULL   │
+     * ╰────────┴───────┴───────┴────────┴────────┴────────┴────────╯
+     * 
+     * ////////////////
+     * // Operations //
+     * ////////////////
+     * 
+     * Detailed description of operations
+     * 
+     * // TODO: Make sure vocabulary accurately represents operations
+     * 
+     * ╭────────┬────────────────┬────────────────┬─────────────────────────────────────────────╮
+     * │ Name   │ Operand 1      │ Operand 2      │ Description                                 │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ ADD    │ summand        │ summand        │ Add Op 1 to Op 2. Store in _                │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ SUB    │ minuend        │ subtrahend     │ Subtract Op 2 from Op 1. Store in _         │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ MUL    │ multiplier     │ multiplicand   │ Multiply Op 1 and Op 2. Store in _          │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ DIV    │ dividend       │ divisor        │ Divide Op 2 by Op 1. Store in _             │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ RCP    │ value          │  [ NOT USED ]  │ Store the inverse of Op 1 in _              │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ SQT    │ value          │  [ NOT USED ]  │ Store the square root of Op 1 in _          │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ STR    │ output         │ input          │ Store Op 2 into Op 1                        │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ END    │  [ NOT USED ]  │  [ NOT USED ]  │ Halt program execution                      │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ RSQ    │ value          │  [ NOT USED ]  │ Store the inverse square root of Op 1 in _  │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ MAX    │ value A        │ value B        │ Store the larger of Op 1 and Op 2 in _      │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ MIN    │ value A        │ value B        │ Store the smaller of Op 1 and Op 2 in _     │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ AND    │ value A        │ value B        │ And the bits of Op 1 and op 2. Store in _   │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ OR     │ value A        │ value B        │ Or the bits of Op 1 and op 2. Store in _    │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ XOR    │ value A        │ value B        │ Xor the bits of Op 1 and op 2. Store in _   │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ SHR    │ value          │  [ NOT USED ]  │ Shift bits of Op 1 to the right. Store in _ │
+     * ├────────┼────────────────┼────────────────┼─────────────────────────────────────────────┤
+     * │ SHL    │ value          │  [ NOT USED ]  │ Shift bits of Op 1 to the left. Store in _  │
+     * ╰────────┴────────────────┴────────────────┴─────────────────────────────────────────────╯
+     */
+
     // Initialzied data
-    size_t   len                = load_file(path, 0, true);
-    u16     *p_instructions     = VECTORIZE_REALLOC(0, sizeof(char) * (len));
-    size_t   _instruction_count = len / 2;
-    size_t (*p_add_best)(void *, void *, void *) = 0;
-    size_t (*p_sub_best)(void *, void *, void *) = 0;
-    size_t (*p_mul_best)(void *, void *, void *) = 0;
-    size_t (*p_div_best)(void *, void *, void *) = 0;
-    size_t (*p_rcp_best)(void *, void *, void *) = 0;
-    size_t (*p_sqt_best)(void *, void *, void *) = 0;
-    size_t (*p_str_best)(void *, void *, void *) = 0;
-    size_t (*p_end_best)(void *, void *, void *) = 0;
-    size_t (*p_rsq_best)(void *, void *, void *) = 0;
-    size_t (*p_max_best)(void *, void *, void *) = 0;
-    size_t (*p_min_best)(void *, void *, void *) = 0;
-    size_t (*p_and_best)(void *, void *, void *) = 0;
-    size_t (*p_orr_best)(void *, void *, void *) = 0;
-    size_t (*p_xor_best)(void *, void *, void *) = 0;
-    size_t (*p_shr_best)(void *, void *, void *) = 0;
-    size_t (*p_shl_best)(void *, void *, void *) = 0;
+    size_t   len                                      = load_file(path, 0, true),
+             _instruction_count                       = len / 2,
+           (*p_add_best)     (void *, void *, void *) = 0,
+           (*p_sub_best)     (void *, void *, void *) = 0,
+           (*p_mul_best)     (void *, void *, void *) = 0,
+           (*p_div_best)     (void *, void *, void *) = 0,
+           (*p_rcp_best)     (void *, void *, void *) = 0,
+           (*p_sqt_best)     (void *, void *, void *) = 0,
+           (*p_str_best)     (void *, void *, void *) = 0,
+           (*p_end_best)     (void *, void *, void *) = 0,
+           (*p_rsq_best)     (void *, void *, void *) = 0,
+           (*p_max_best)     (void *, void *, void *) = 0,
+           (*p_min_best)     (void *, void *, void *) = 0,
+           (*p_and_best)     (void *, void *, void *) = 0,
+           (*p_orr_best)     (void *, void *, void *) = 0,
+           (*p_xor_best)     (void *, void *, void *) = 0,
+           (*p_shr_best)     (void *, void *, void *) = 0,
+           (*p_shl_best)     (void *, void *, void *) = 0,
+           (*p_i8_i16_best)  (void *, void *)         = 0,
+           (*p_i8_i32_best)  (void *, void *)         = 0,
+           (*p_i8_i64_best)  (void *, void *)         = 0,
+           (*p_i8_f32_best)  (void *, void *)         = 0,
+           (*p_i8_f64_best)  (void *, void *)         = 0,
+           (*p_i16_i8_best)  (void *, void *)         = 0,
+           (*p_i16_i32_best) (void *, void *)         = 0,
+           (*p_i16_i64_best) (void *, void *)         = 0,
+           (*p_i16_f32_best) (void *, void *)         = 0,
+           (*p_i16_f64_best) (void *, void *)         = 0,
+           (*p_i32_i8_best)  (void *, void *)         = 0,
+           (*p_i32_i16_best) (void *, void *)         = 0,
+           (*p_i32_i64_best) (void *, void *)         = 0,
+           (*p_i32_f32_best) (void *, void *)         = 0,
+           (*p_i32_f64_best) (void *, void *)         = 0,
+           (*p_i64_i8_best)  (void *, void *)         = 0,
+           (*p_i64_i16_best) (void *, void *)         = 0,
+           (*p_i64_i32_best) (void *, void *)         = 0,
+           (*p_i64_f32_best) (void *, void *)         = 0,
+           (*p_i64_f64_best) (void *, void *)         = 0,
+           (*p_f32_i8_best)  (void *, void *)         = 0,
+           (*p_f32_i16_best) (void *, void *)         = 0,
+           (*p_f32_i32_best) (void *, void *)         = 0,
+           (*p_f32_i64_best) (void *, void *)         = 0,
+           (*p_f32_f64_best) (void *, void *)         = 0,
+           (*p_f64_i8_best)  (void *, void *)         = 0,
+           (*p_f64_i16_best) (void *, void *)         = 0,
+           (*p_f64_i32_best) (void *, void *)         = 0,
+           (*p_f64_i64_best) (void *, void *)         = 0,
+           (*p_f64_f32_best) (void *, void *)         = 0;
+    u16     *p_instructions                           = VECTORIZE_REALLOC(0, sizeof(char) * (len));
+    int      format_stride                            = 1;
+    size_t (*conversion_functions[6][6])()            = { 0 };
 
     // Load the binary from a path
     load_file(path, p_instructions, true);
-
-    int format_stride = 1;
 
     // Set the operation callbacks
     switch ( format_stride )
@@ -695,17 +889,17 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
                     p_sub_best = machine_sub_u8_,
                     p_mul_best = machine_mul_u8_,
                     p_div_best = machine_div_u8_,
-                    //p_rcp_best = machine_rcp_u8_,
-                    //p_sqt_best = machine_sqt_u8_,
-                    //p_str_best = machine_str_u8_,
-                    p_rsq_best = 0,
+                    p_rcp_best = 0, // machine_rcp_u8_,
+                    p_sqt_best = 0, // machine_sqt_u8_,
+                    p_str_best = 0, // machine_str_u8_,
+                    p_rsq_best = 0, // machine_rsq_u8_,
                     p_max_best = machine_max_u8_,
                     p_min_best = machine_min_u8_,
                     p_and_best = machine_and_u8_,
                     p_orr_best = machine_or_u8_,
                     p_xor_best = machine_xor_u8_,
-                    p_shr_best = 0,
-                    p_shl_best = 0; 
+                    p_shr_best = 0, // machine_shr_u8_,
+                    p_shl_best = 0; // machine_shl_u8_
 
                     #ifdef VECTORIZE_BUILD_WITH_SSE2
 
@@ -765,7 +959,6 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
                                                 p_sub_best = machine_sub_u8_avx512;
                                             #endif
                                         #endif
-
                                     #endif
                                 #endif
                             #endif
@@ -777,6 +970,7 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
 
         // Machine is processing words
         case 2:
+
             // Set the best word operations
             {
                             
@@ -878,17 +1072,110 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
 
         // Machine is processing double words
         case 4:
-            {
 
-                // Set the best double word operations
-                {
-                    
-                }
+            // Set the best double word operations
+            {
+                            
+                // Platform dependent implementation
+                #ifdef VECTORIZE_BUILD_WITH_INTEGRAL
+            
+                    ///////////////////////////////////////////
+                    // Best byte functions for integral type //
+                    ///////////////////////////////////////////
+                    p_add_best = machine_add_u32_,
+                    p_sub_best = machine_sub_u32_,
+                    p_mul_best = machine_mul_u32_,
+                    p_div_best = machine_div_u32_,
+                    //p_rcp_best = machine_rcp_u32_,
+                    //p_sqt_best = machine_sqt_u32_,
+                    //p_str_best = machine_str_u32_,
+                    p_rsq_best = 0,
+                    p_max_best = machine_max_u32_,
+                    p_min_best = machine_min_u32_,
+                    p_and_best = machine_and_u32_,
+                    p_orr_best = machine_or_u32_,
+                    p_xor_best = machine_xor_u32_,
+                    p_shr_best = 0,
+                    p_shl_best = 0; 
+            
+                    #ifdef VECTORIZE_BUILD_WITH_SSE2
+            
+                        //////////////////////////////////////////
+                        // Best double word functions for SSE 2 //
+                        //////////////////////////////////////////
+                        //p_add_best = machine_add_u32_sse2;
+                        //p_sub_best = machine_sub_u32_sse2;
+            
+                        #ifdef VECTORIZE_BUILD_WITH_SSE42
+            
+                            ////////////////////////////////////////////
+                            // Best double word functions for SSE 4.2 //
+                            ////////////////////////////////////////////
+                            // TODO:
+                            
+                            #ifdef VECTORIZE_BUILD_WITH_AVX
+            
+                                ////////////////////////////////////////
+                                // Best double word functions for AVX //
+                                ////////////////////////////////////////
+                                //p_add_best = machine_add_u32_avx;
+                                //p_sub_best = machine_sub_u32_avx;
+            
+                                p_and_best = machine_and_avx;
+                                p_orr_best = machine_or_avx;
+                                p_xor_best = machine_xor_avx;
+            
+                                #ifdef VECTORIZE_BUILD_WITH_AVX2
+            
+                                    //////////////////////////////////////////
+                                    // Best double word functions for AVX 2 //
+                                    //////////////////////////////////////////
+                                    //p_add_best = machine_add_u32_avx2;
+                                    //p_sub_best = machine_sub_u32_avx2;
+            
+                                    //p_max_best = machine_max_u32_avx2;
+                                    //p_min_best = machine_min_u32_avx2;
+            
+                                    p_and_best = machine_and_avx2;
+                                    p_orr_best = machine_or_avx2;
+                                    p_xor_best = machine_xor_avx2;
+            
+                                    #ifdef VECTORIZE_BUILD_WITH_AVX512_FOUNDATION 
+            
+                                        ////////////////////////////////////////////
+                                        // Best double word functions for AVX 512 //
+                                        ////////////////////////////////////////////
+            
+                                        #ifdef VECTORIZE_BUILD_WITH_AVX512_VECTOR_LENGTH
+                                            #ifdef VECTORIZE_BUILD_WITH_AVX512_DOUBLE_QUAD_WORD
+
+                                                //////////////////////////////////////////////////////
+                                                // Best double word functions for AVX 512 + VL + DQ //
+                                                //////////////////////////////////////////////////////
+
+                                                p_add_best = machine_add_u8_avx512;
+                                                p_sub_best = machine_sub_u8_avx512;
+
+                                                p_max_best = machine_max_u32_avx512;
+                                                p_min_best = machine_min_u32_avx512;
+
+                                                p_and_best = machine_and_avx512;
+                                                p_orr_best = machine_or_avx512;
+                                                p_xor_best = machine_xor_avx512;
+                                            #endif
+                                        #endif
+                                    #endif
+                                #endif
+                            #endif
+                        #endif
+                    #endif
+                #endif
             }
             break;
 
         // Machine is processing quad words
         case 8:
+
             {
 
                 // Set the best quad word operations
@@ -897,6 +1184,99 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
                 }
             }
             break;
+    }
+
+    // Set the conversion matrix
+    {
+                            
+        // Platform dependent implementation
+        #ifdef VECTORIZE_BUILD_WITH_INTEGRAL
+        
+            ////////////////////////////////////////////
+            // Best conversion functions for integral //
+            ////////////////////////////////////////////
+
+            p_i8_i16_best  = machine_conv_8_16_;
+            p_i8_i32_best  = machine_conv_8_32_;
+            p_i8_i64_best  = machine_conv_8_64_;
+            p_i8_f32_best  = machine_conv_8_f32_;
+            p_i8_f64_best  = machine_conv_8_f64_;
+
+            p_i16_i8_best  = machine_conv_16_8_;
+            p_i16_i32_best = machine_conv_16_32_;
+            p_i16_i64_best = machine_conv_16_64_;
+            p_i16_f32_best = machine_conv_16_f32_;
+            p_i16_f64_best = machine_conv_16_f64_;
+
+            p_i32_i8_best  = machine_conv_32_8_;
+            p_i32_i16_best = machine_conv_32_16_;
+            p_i32_i64_best = machine_conv_32_64_;
+            p_i32_f32_best = machine_conv_32_f32_;
+            p_i32_f64_best = machine_conv_32_f64_;
+
+            p_i64_i8_best  = machine_conv_64_8_;
+            p_i64_i16_best = machine_conv_64_16_;
+            p_i64_i32_best = machine_conv_64_32_;
+            p_i64_f32_best = machine_conv_64_f32_;
+            p_i64_f64_best = machine_conv_64_f64_;
+
+            p_f32_i8_best  = machine_conv_f32_8_;
+            p_f32_i16_best = machine_conv_f32_16_;
+            p_f32_i32_best = machine_conv_f32_32_;
+            p_f32_i64_best = machine_conv_f32_64_;
+            p_f32_f64_best = machine_conv_f32_f64_;
+
+            p_f64_i8_best  = machine_conv_f64_8_;
+            p_f64_i16_best = machine_conv_f64_16_;
+            p_f64_i32_best = machine_conv_f64_32_;
+            p_f64_i64_best = machine_conv_f64_64_;
+            p_f64_f32_best = machine_conv_f64_f32_;
+        
+            #ifdef VECTORIZE_BUILD_WITH_SSE2
+        
+                /////////////////////////////////////////
+                // Best conversion functions for SSE 2 //
+                /////////////////////////////////////////
+                        
+                #ifdef VECTORIZE_BUILD_WITH_SSE42
+        
+                    ///////////////////////////////////////////
+                    // Best conversion functions for SSE 4.2 //
+                    ///////////////////////////////////////////
+
+                    #ifdef VECTORIZE_BUILD_WITH_AVX
+        
+                        ///////////////////////////////////////
+                        // Best conversion functions for AVX //
+                        ///////////////////////////////////////
+                                
+                        #ifdef VECTORIZE_BUILD_WITH_AVX2
+        
+                            /////////////////////////////////////////
+                            // Best conversion functions for AVX 2 //
+                            /////////////////////////////////////////
+                                    
+                            #ifdef VECTORIZE_BUILD_WITH_AVX512_FOUNDATION 
+        
+                                ///////////////////////////////////////////
+                                // Best conversion functions for AVX 512 //
+                                ///////////////////////////////////////////
+        
+                                #ifdef VECTORIZE_BUILD_WITH_AVX512_VECTOR_LENGTH
+                                    #ifdef VECTORIZE_BUILD_WITH_AVX512_BYTE_WORD
+                                        
+                                    #endif
+
+                                    #ifdef VECTORIZE_BUILD_WITH_AVX512_DWORD_QWORD
+                                        
+                                    #endif
+                                #endif
+                            #endif
+                        #endif
+                    #endif
+                #endif
+            #endif
+        #endif  
     }
 
     // Populate the machine at the parameter pointer
@@ -928,6 +1308,34 @@ int machine_load_program ( machine *p_machine, char *path, char *in_0, char *out
             .pfn_xor = p_xor_best,
             .pfn_shr = p_shr_best,
             .pfn_shl = p_shl_best
+        },
+        .conversion_functions = (size_t (*[6][6])(void *, void *))
+        {
+            { 0            , p_i8_i16_best , p_i8_i32_best , p_i8_i64_best , p_i8_f32_best , p_i8_f64_best  },
+            { p_i16_i8_best, 0             , p_i16_i32_best, p_i16_i64_best, p_i16_f32_best, p_i16_f64_best },
+            { p_i32_i8_best, p_i32_i16_best, 0             , p_i32_i64_best, p_i32_f32_best, p_i32_f64_best },
+            { p_i64_i8_best, p_i64_i16_best, p_i64_i32_best, 0             , p_i64_f32_best, p_i64_f64_best },
+            { p_f32_i8_best, p_f32_i16_best, p_f32_i32_best, p_f32_i64_best, 0             , p_f32_f64_best },
+            { p_f64_i8_best, p_f64_i16_best, p_f64_i32_best, p_f64_i64_best, p_f64_f32_best, 0              }
+        },
+        .operation_functions = (size_t (*[16])(void *, void *, void *))
+        {
+            p_add_best,
+            p_sub_best,
+            p_mul_best,
+            p_div_best,
+            p_rcp_best,
+            p_sqt_best,
+            p_str_best,
+            p_end_best,
+            p_rsq_best,
+            p_max_best,
+            p_min_best,
+            p_and_best,
+            p_orr_best,
+            p_xor_best,
+            p_shr_best,
+            p_shl_best
         }
     };
 
@@ -977,6 +1385,7 @@ int machine_add ( machine *p_machine, data_stream *a, data_stream *b )
          *p_b  = "                                                                                                                                \0";
     char *DATA = VECTORIZE_REALLOC(0, sizeof(char)*129);
 
+    // TODO: Remove this stub
     DATA[128]='\0';
 
     p_a += 64;
@@ -987,6 +1396,21 @@ int machine_add ( machine *p_machine, data_stream *a, data_stream *b )
 
     DATA += 64;
     DATA =  (void *) (size_t) ( ( (size_t)(DATA) ) & 0xFFFFFFFFFFFFFFC0  );
+
+    
+    // TODO: Get a pointer to DATA 
+    // TODO: Get a pointer to A 
+    // TODO: Get a pointer to B 
+
+    // NOTE: parameters to pfn_add must be aligned correctly.
+    // That means:
+    // 
+    // AVX 512  : 512-bit register : 64 bytes 
+    // AVX 2    : 256-bit register : 32 bytes 
+    // AVX      : 128-bit register : 16 bytes 
+    // SSE 4.2  : 128-bit register : 16 bytes 
+    // SSE 2    : 128-bit register : 16 bytes 
+    // INTEGRAL : 64-bit register  : 8 bytes  
 
     // Execute the add instruction
     (size_t)p_machine->operation.pfn_add(DATA, p_b, p_a);
@@ -1006,6 +1430,7 @@ int machine_add ( machine *p_machine, data_stream *a, data_stream *b )
 
                 // Error 
                 return 0;
+
             no_op1:
                 #ifndef NDEBUG
                     printf("[vectorize] Null pointer provided for parameter \"a\" in call to function \"%s\"\n", __FUNCTION__);
@@ -1013,6 +1438,7 @@ int machine_add ( machine *p_machine, data_stream *a, data_stream *b )
 
                 // Error 
                 return 0;
+
             no_op2:
                 #ifndef NDEBUG
                     printf("[vectorize] Null pointer provided for parameter \"b\" in call to function \"%s\"\n", __FUNCTION__);
@@ -1063,6 +1489,8 @@ int machine_tick ( machine *p_machine )
     putchar('\n');
     fflush(stdout);
 
+    size_t (*operation_functions)(void *p_result, void *a, void *b) = p_machine->operation_functions[_instruction.operation_type];
+
     // Process the instruction
     switch (_instruction.operation_type)
     {
@@ -1107,7 +1535,7 @@ int machine_tick ( machine *p_machine )
     }
 }
 
-int machine_start ( machine *p_machine )
+int machine_run ( machine *p_machine )
 {
 
     // Argument check
@@ -1146,7 +1574,7 @@ int machine_start ( machine *p_machine )
 //////////////
 
 // Add
-size_t machine_add_u8_ ( void *p_result, void *a, void *b )
+size_t machine_add_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Add
@@ -1155,7 +1583,6 @@ size_t machine_add_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_add_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1165,7 +1592,6 @@ size_t machine_add_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_add_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1175,7 +1601,6 @@ size_t machine_add_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_add_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1185,7 +1610,6 @@ size_t machine_add_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_add_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1195,7 +1619,6 @@ size_t machine_add_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_add_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1207,7 +1630,7 @@ size_t machine_add_f64_ ( void *p_result, void *a, void *b )
 }
 
 // Sub
-size_t machine_sub_u8_ ( void *p_result, void *a, void *b )
+size_t machine_sub_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Sub
@@ -1216,7 +1639,6 @@ size_t machine_sub_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_sub_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1226,7 +1648,6 @@ size_t machine_sub_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_sub_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1236,7 +1657,6 @@ size_t machine_sub_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_sub_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1246,7 +1666,6 @@ size_t machine_sub_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_sub_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1256,7 +1675,6 @@ size_t machine_sub_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_sub_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1268,7 +1686,7 @@ size_t machine_sub_f64_ ( void *p_result, void *a, void *b )
 }
 
 // Mul
-size_t machine_mul_u8_ ( void *p_result, void *a, void *b )
+size_t machine_mul_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Mul
@@ -1277,7 +1695,6 @@ size_t machine_mul_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_mul_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1287,7 +1704,6 @@ size_t machine_mul_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_mul_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1297,7 +1713,6 @@ size_t machine_mul_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_mul_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1307,7 +1722,6 @@ size_t machine_mul_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_mul_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1317,7 +1731,6 @@ size_t machine_mul_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_mul_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1329,7 +1742,7 @@ size_t machine_mul_f64_ ( void *p_result, void *a, void *b )
 }
 
 // Div
-size_t machine_div_u8_ ( void *p_result, void *a, void *b )
+size_t machine_div_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Div
@@ -1338,7 +1751,6 @@ size_t machine_div_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_div_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1348,7 +1760,6 @@ size_t machine_div_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 2;
 }
-
 size_t machine_div_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1358,7 +1769,6 @@ size_t machine_div_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_div_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1368,7 +1778,6 @@ size_t machine_div_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 8;
 }
-
 size_t machine_div_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1378,7 +1787,6 @@ size_t machine_div_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_div_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1389,8 +1797,12 @@ size_t machine_div_f64_ ( void *p_result, void *a, void *b )
     return 8;
 }
 
+// Rcp
+
+// Sqt
+
 // Max
-size_t machine_max_u8_ ( void *p_result, void *a, void *b )
+size_t machine_max_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Max
@@ -1399,7 +1811,6 @@ size_t machine_max_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_max_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1409,7 +1820,6 @@ size_t machine_max_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 2;
 }
-
 size_t machine_max_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1419,7 +1829,6 @@ size_t machine_max_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_max_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1429,7 +1838,6 @@ size_t machine_max_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 8;
 }
-
 size_t machine_max_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1439,7 +1847,6 @@ size_t machine_max_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_max_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1451,7 +1858,7 @@ size_t machine_max_f64_ ( void *p_result, void *a, void *b )
 }
 
 // Min
-size_t machine_min_u8_ ( void *p_result, void *a, void *b )
+size_t machine_min_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Min
@@ -1460,7 +1867,6 @@ size_t machine_min_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_min_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1470,7 +1876,6 @@ size_t machine_min_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 2;
 }
-
 size_t machine_min_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1480,7 +1885,6 @@ size_t machine_min_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_min_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1490,7 +1894,6 @@ size_t machine_min_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 8;
 }
-
 size_t machine_min_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1500,7 +1903,6 @@ size_t machine_min_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_min_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1512,7 +1914,7 @@ size_t machine_min_f64_ ( void *p_result, void *a, void *b )
 }
 
 // And
-size_t machine_and_u8_ ( void *p_result, void *a, void *b )
+size_t machine_and_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Max
@@ -1521,7 +1923,6 @@ size_t machine_and_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_and_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1531,7 +1932,6 @@ size_t machine_and_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 2;
 }
-
 size_t machine_and_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1541,7 +1941,6 @@ size_t machine_and_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_and_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1551,7 +1950,6 @@ size_t machine_and_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 8;
 }
-
 size_t machine_and_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1561,7 +1959,6 @@ size_t machine_and_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_and_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1573,7 +1970,7 @@ size_t machine_and_f64_ ( void *p_result, void *a, void *b )
 }
 
 // Or
-size_t machine_or_u8_ ( void *p_result, void *a, void *b )
+size_t machine_or_u8_   ( void *p_result, void *a, void *b )
 {
 
     // Or
@@ -1582,8 +1979,7 @@ size_t machine_or_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
-size_t machine_or_u16_ ( void *p_result, void *a, void *b )
+size_t machine_or_u16_  ( void *p_result, void *a, void *b )
 {
 
     // Or
@@ -1592,8 +1988,7 @@ size_t machine_or_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 2;
 }
-
-size_t machine_or_u32_ ( void *p_result, void *a, void *b )
+size_t machine_or_u32_  ( void *p_result, void *a, void *b )
 {
 
     // Or
@@ -1602,8 +1997,7 @@ size_t machine_or_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
-size_t machine_or_u64_ ( void *p_result, void *a, void *b )
+size_t machine_or_u64_  ( void *p_result, void *a, void *b )
 {
 
     // Or
@@ -1612,8 +2006,7 @@ size_t machine_or_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 8;
 }
-
-size_t machine_or_f32_ ( void *p_result, void *a, void *b )
+size_t machine_or_f32_  ( void *p_result, void *a, void *b )
 {
 
     // Or
@@ -1622,8 +2015,7 @@ size_t machine_or_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
-size_t machine_or_f64_ ( void *p_result, void *a, void *b )
+size_t machine_or_f64_  ( void *p_result, void *a, void *b )
 {
 
     // Or
@@ -1634,7 +2026,7 @@ size_t machine_or_f64_ ( void *p_result, void *a, void *b )
 }
 
 // Xor
-size_t machine_xor_u8_ ( void *p_result, void *a, void *b )
+size_t machine_xor_u8_  ( void *p_result, void *a, void *b )
 {
 
     // Xor
@@ -1643,7 +2035,6 @@ size_t machine_xor_u8_ ( void *p_result, void *a, void *b )
     // Success
     return 1;
 }
-
 size_t machine_xor_u16_ ( void *p_result, void *a, void *b )
 {
 
@@ -1653,7 +2044,6 @@ size_t machine_xor_u16_ ( void *p_result, void *a, void *b )
     // Success
     return 2;
 }
-
 size_t machine_xor_u32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1663,7 +2053,6 @@ size_t machine_xor_u32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_xor_u64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1673,7 +2062,6 @@ size_t machine_xor_u64_ ( void *p_result, void *a, void *b )
     // Success
     return 8;
 }
-
 size_t machine_xor_f32_ ( void *p_result, void *a, void *b )
 {
 
@@ -1683,7 +2071,6 @@ size_t machine_xor_f32_ ( void *p_result, void *a, void *b )
     // Success
     return 4;
 }
-
 size_t machine_xor_f64_ ( void *p_result, void *a, void *b )
 {
 
@@ -1692,4 +2079,290 @@ size_t machine_xor_f64_ ( void *p_result, void *a, void *b )
 
     // Success
     return 8;
+}
+
+// Shr
+
+// Shl
+
+// 8-bit -> X
+size_t machine_conv_8_16_  ( void *p_result, void *a )
+{
+    
+    // 8-bit -> 16-bit
+    *(u16*)p_result = *(u8*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_8_32_  ( void *p_result, void *a )
+{
+    
+    // 8-bit -> 32-bit
+    *(u32*)p_result = *(u8*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_8_64_  ( void *p_result, void *a )
+{
+    
+    // 8-bit -> 64-bit
+    *(u64*)p_result = *(u8*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_8_f32_ ( void *p_result, void *a )
+{
+    
+    // 8-bit -> 32-bit float
+    *(f32*)p_result = *(u8*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_8_f64_ ( void *p_result, void *a )
+{
+    
+    // 8-bit -> 64-bit float
+    *(f64*)p_result = *(u8*)a;
+
+    // Success   
+    return 1;
+}
+
+// 16-bit -> X
+size_t machine_conv_16_8_   ( void *p_result, void *a )
+{
+    
+    // 16-bit -> 8-bit
+    *(u8*)p_result = *(u16*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_16_32_  ( void *p_result, void *a )
+{
+    
+    // 16-bit -> 32-bit
+    *(u32*)p_result = *(u16*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_16_64_  ( void *p_result, void *a )
+{
+    
+    // 16-bit -> 64-bit
+    *(u64*)p_result = *(u16*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_16_f32_ ( void *p_result, void *a )
+{
+    
+    // 16-bit -> 32-bit float
+    *(f32*)p_result = *(u16*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_16_f64_ ( void *p_result, void *a )
+{
+    
+    // 16-bit -> 64-bit float
+    *(f64*)p_result = *(u16*)a;
+
+    // Success   
+    return 1;
+}
+
+// 32-bit -> X
+size_t machine_conv_32_8_   ( void *p_result, void *a )
+{
+
+    // 32-bit -> 8-bit 
+    *(u8*)p_result = *(u32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_32_16_  ( void *p_result, void *a )
+{
+
+    // 32-bit -> 16-bit 
+    *(u16*)p_result = *(u32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_32_64_  ( void *p_result, void *a )
+{
+    
+    // 32-bit -> 64-bit 
+    *(u64*)p_result = *(u32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_32_f32_ ( void *p_result, void *a )
+{
+    
+    // 32-bit -> 32-bit float
+    *(f32*)p_result = *(u32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_32_f64_ ( void *p_result, void *a )
+{
+    
+    // 32-bit -> 64-bit float
+    *(f64*)p_result = *(u32*)a;
+
+    // Success   
+    return 1;
+}
+
+// 64-bit -> X
+size_t machine_conv_64_8_    ( void *p_result, void *a )
+{
+    
+    // 64-bit -> 8-bit
+    *(u8*)p_result = *(u64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_64_16_   ( void *p_result, void *a )
+{
+    
+    // 64-bit -> 16-bit
+    *(u16*)p_result = *(u64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_64_32_   ( void *p_result, void *a )
+{
+    
+    // 64-bit -> 32-bit
+    *(u32*)p_result = *(u64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_64_f32_  ( void *p_result, void *a )
+{
+    
+    // 64-bit -> 32-bit float
+    *(f32*)p_result = *(u64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_64_f64_  ( void *p_result, void *a )
+{
+    
+    // 64-bit -> 64-bit float
+    *(f64*)p_result = *(u64*)a;
+
+    // Success   
+    return 1;
+}
+
+// 32-bit -> X
+size_t machine_conv_f32_8_   ( void *p_result, void *a )
+{
+    
+    // 32-bit float -> 8-bit
+    *(u8*)p_result = *(f32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f32_16_  ( void *p_result, void *a )
+{
+    
+    // 32-bit float -> 16-bit
+    *(u16*)p_result = *(f32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f32_32_  ( void *p_result, void *a )
+{
+    
+    // 32-bit float -> 32-bit
+    *(u32*)p_result = *(f32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f32_64_  ( void *p_result, void *a )
+{
+    
+    // 32-bit float -> 64-bit
+    *(f32*)p_result = *(f32*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f32_f64_ ( void *p_result, void *a )
+{
+    
+    // 32-bit float -> 64-bit float
+    *(f64*)p_result = *(f32*)a;
+
+    // Success   
+    return 1;
+}
+
+// 64-bit -> X
+size_t machine_conv_f64_8_   ( void *p_result, void *a )
+{
+    
+    // 64-bit float -> 8-bit
+    *(u8*)p_result = *(f64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f64_16_  ( void *p_result, void *a )
+{
+    
+    // 64-bit float -> 16-bit
+    *(u16*)p_result = *(f64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f64_32_  ( void *p_result, void *a )
+{
+    
+    // 64-bit float -> 32-bit
+    *(u32*)p_result = *(f64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f64_64_  ( void *p_result, void *a )
+{
+    
+    // 64-bit float -> 64-bit
+    *(u64*)p_result = *(f64*)a;
+
+    // Success   
+    return 1;
+}
+size_t machine_conv_f64_f32_ ( void *p_result, void *a )
+{
+    
+    // 64-bit float -> 32-bit float
+    *(f32*)p_result = *(f64*)a;
+
+    // Success   
+    return 1;
 }
