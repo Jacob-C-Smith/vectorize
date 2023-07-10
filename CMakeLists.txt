@@ -32,6 +32,11 @@ set_source_files_properties("vectorize avx512.asm" "vectorize avx2.asm" "vectori
 add_executable (vectorize_example "main.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm") #
 target_include_directories(vectorize_example PUBLIC "include")
 
+# Add source to the disassembler
+add_executable (vectorize_disassembler "disassemble.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm")
+target_include_directories(vectorize_disassembler PUBLIC "include")
+
+
 # Add source to the tester
 add_executable (vectorize_test "vectorize test.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm")
 target_include_directories(vectorize_test PUBLIC "include")
