@@ -480,11 +480,11 @@ int instruction_decode ( instruction *p_instruction, u16 instruction_bin )
     if ( p_instruction == (void *) 0 ) goto no_instruction;
 
     // Initialized data    
-    enum operation_type_e operation_type  = ( instruction_bin & 0xE000 ) >> 13; // 1110 0000 0000 0000
+    enum operation_type_e operation_type  = ( instruction_bin & 0xF000 ) >> 12; // 1111 0000 0000 0000
     enum operand_type_e   operand_1_type  = ( instruction_bin & 0x0C00 ) >> 10; // 0000 1100 0000 0000
-    u8                    operand_1_index = ( instruction_bin & 0x01C0 ) >> 6;  // 0000 0001 1100 0000
-    enum operand_type_e   operand_2_type  = ( instruction_bin & 0x0038 ) >> 4;  // 0000 0000 0011 1000
-    u8                    operand_2_index = ( instruction_bin & 0x0007 );       // 0000 0000 0000 0111
+    u8                    operand_1_index = ( instruction_bin & 0x03C0 ) >> 6;  // 0000 0011 1100 0000
+    enum operand_type_e   operand_2_type  = ( instruction_bin & 0x0030 ) >> 4;  // 0000 0000 0011 0000
+    u8                    operand_2_index = ( instruction_bin & 0x000F );       // 0000 0000 0000 1111
 
     // Populate the return value
     *p_instruction = (instruction)
@@ -1484,6 +1484,84 @@ int machine_add ( machine *p_machine, data_stream *a, data_stream *b )
     }
 }
 
+int machine_sub ( machine *p_machine, data_stream *a, data_stream *b )
+{
+
+    // Argument check
+    if ( p_machine == (void *) 0 ) goto no_machine;
+    //if ( a         == (void *) 0 ) goto no_op1;
+    //if ( b         == (void *) 0 ) goto no_op2;
+    
+    // Initialized data
+    char *p_a  = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0", //p_a = &((u8 *)a->data)[p_machine->index * a->stride],
+         *p_b  = "                                                                                                                                \0";
+    char *DATA = VECTORIZE_REALLOC(0, sizeof(char)*129);
+
+    // TODO: Remove this stub
+    DATA[128]='\0';
+
+    p_a += 64;
+    p_a =  (void *) (size_t) ( ( (size_t)(p_a) ) & 0xFFFFFFFFFFFFFFC0  );
+
+    p_b += 64;
+    p_b =  (void *) (size_t) ( ( (size_t)(p_b) ) & 0xFFFFFFFFFFFFFFC0  );
+
+    DATA += 64;
+    DATA =  (void *) (size_t) ( ( (size_t)(DATA) ) & 0xFFFFFFFFFFFFFFC0  );
+
+    
+    // TODO: Get a pointer to DATA 
+    // TODO: Get a pointer to A 
+    // TODO: Get a pointer to B 
+
+    // NOTE: parameters to pfn_sub must be aligned correctly.
+    // That means:
+    // 
+    // AVX 512  : 512-bit register : 64 bytes 
+    // AVX 2    : 256-bit register : 32 bytes 
+    // AVX      : 128-bit register : 16 bytes 
+    // SSE 4.2  : 128-bit register : 16 bytes 
+    // SSE 2    : 128-bit register : 16 bytes 
+    // INTEGRAL : 64-bit register  : 8 bytes  
+
+    // Execute the sub instruction
+    (size_t)p_machine->operation.pfn_sub(DATA, p_b, p_a);
+
+    // Success
+    return 1;
+
+    // Error handling
+    {
+
+        // Argument errors
+        {
+            no_machine:
+                #ifndef NDEBUG
+                    printf("[vectorize] Null pointer provided for parameter \"p_machine\" in call to function \"%s\"\n", __FUNCTION__);
+                #endif
+
+                // Error 
+                return 0;
+
+            no_op1:
+                #ifndef NDEBUG
+                    printf("[vectorize] Null pointer provided for parameter \"a\" in call to function \"%s\"\n", __FUNCTION__);
+                #endif
+
+                // Error 
+                return 0;
+
+            no_op2:
+                #ifndef NDEBUG
+                    printf("[vectorize] Null pointer provided for parameter \"b\" in call to function \"%s\"\n", __FUNCTION__);
+                #endif
+
+                // Error 
+                return 0;
+        }
+    }
+}
+
 int machine_tick ( machine *p_machine )
 {
 
@@ -1491,26 +1569,19 @@ int machine_tick ( machine *p_machine )
     if ( p_machine == (void *) 0 ) goto no_machine;
 
     // Initialized data
-    u16          instruction_bin = p_machine->program.p_instructions[p_machine->program.program_counter];
-    instruction  _instruction    = { 0 };
-    data_stream *a               = 0,
-                *b               = 0;
+    u16            instruction_bin                                       = p_machine->program.p_instructions[p_machine->program.program_counter];
+    size_t       (*operation_function)(void *p_result, void *a, void *b) = 0;
+    instruction    _instruction                                          = { 0 };
+    data_stream   *a                                                     = p_machine->context,
+                  *b                                                     = p_machine->context;
 
     // Get the in/out/var buffer
     if ( _instruction.operand_1.operand_type)
         a = p_machine->data[_instruction.operand_1.operand_type];
     
-    // Get the context
-    else
-        a = p_machine->context;
-
     // Get the in/var buffer
     if ( _instruction.operand_2.operand_type)
         b = p_machine->data[_instruction.operand_2.operand_type];
-
-    // Get the context
-    else
-        b = p_machine->context;
 
     // Increment the instruction counter
     p_machine->program.program_counter++;
@@ -1518,37 +1589,12 @@ int machine_tick ( machine *p_machine )
     // Decode the instruction
     instruction_decode(&_instruction, instruction_bin);
 
-    // Print the instruction
-    instruction_print(_instruction);
-    putchar('\n');
-    fflush(stdout);
+    // Get the operation function
+    operation_function = p_machine->operation_functions[_instruction.operation_type];
 
-    size_t (*operation_functions)(void *p_result, void *a, void *b) = p_machine->operation_functions[_instruction.operation_type];
-
-    // Process the instruction
-    switch (_instruction.operation_type)
-    {
-        case VECTORIZE_OPERATION_ADD:
-            machine_add(p_machine, a, b);
-            break;
-        case VECTORIZE_OPERATION_SUB:
-            break;
-        case VECTORIZE_OPERATION_MUL:
-            break;
-        case VECTORIZE_OPERATION_DIV:
-            break;
-        case VECTORIZE_OPERATION_RCP:
-            break;
-        case VECTORIZE_OPERATION_SQT:
-            break;
-        case VECTORIZE_OPERATION_STR:
-            break;
-
-        case VECTORIZE_OPERATION_END:
-            p_machine->is_running = false;
-            break;
-    }
-
+    // Execute the operation function
+    operation_function(p_machine, a, b);
+    
     // Success
     return 1;
 

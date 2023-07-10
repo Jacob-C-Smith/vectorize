@@ -13,14 +13,16 @@ int main(int argc, const char* argv[])
 {
 
     // Initialized data
-    size_t  len         = disassembler_load_file("examples/divide.eddy", 0, true);;
+    size_t  len         = disassembler_load_file("examples/add.eddy", 0, true);;
     u16    *file_buffer = calloc(len+1, sizeof(u8));
 
+
     // Error check
-    if ( file_buffer == 0 ) return 0;
+    if ( argc        != 2 ) goto print_usage;
+    if ( file_buffer == 0 ) goto print_usage;
 
     // Load the program
-    disassembler_load_file("examples/divide.eddy", file_buffer, true);
+    disassembler_load_file("examples/add.eddy", file_buffer, true);
 
     // Disassemble the program
     len /= 2;
@@ -48,6 +50,11 @@ int main(int argc, const char* argv[])
 
     // Success
     return EXIT_SUCCESS;
+
+    print_usage:
+        printf("Usage: vectorize_disassemble file\n");
+        // Success
+        return EXIT_SUCCESS;
 }
 
 // Load a file

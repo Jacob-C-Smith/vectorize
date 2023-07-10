@@ -1,0 +1,13 @@
+{
+    "name" : "adder",
+    "source" : "examples/add.eddy",
+    "in" :
+    [
+        { "format" : "f32", "path" : "examples/A.eddybuffer" },
+        { "format" : "f32", "path" : "examples/B.eddybuffer" }
+    ],
+    "out" :
+    [
+        { "format" : "u32", "path" : "examples/R.eddybuffer" }
+    ]
+}
