@@ -1,4 +1,4 @@
-﻿/** !
+/** !
  * @file vectorize/vectorize.h 
  * 
  * @author Jacob Smith
@@ -119,8 +119,9 @@ struct instruction_s
 // Data stream
 struct data_stream_s
 {
-    void                      *data;
     bool                       constant;
+
+    void                      *data;
     size_t                     size_in_bytes,
                                size,
                                stride;
@@ -182,7 +183,9 @@ DLLEXPORT int  data_stream_load ( data_stream *p_data_stream, const char *path )
 
 //DLLEXPORT int  data_stream_write ( data_stream *p_data_stream, const char *path );
 
-DLLEXPORT int data_stream_read ( data_stream *p_data_stream, enum data_stream_format_e format, size_t items, void *ret );
+DLLEXPORT int  data_stream_load_from_file ( data_stream *p_data_stream, enum data_stream_format_e format, const char *path );
+
+DLLEXPORT int  data_stream_read ( data_stream *p_data_stream, enum data_stream_format_e format, size_t items, void *ret );
 
 DLLEXPORT int  machine_load_program ( machine *p_machine, char *path, char *in_0, char *out_0 );
 

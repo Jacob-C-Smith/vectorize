@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.26)
+﻿cmake_minimum_required (VERSION 3.10)
 
 IF(WIN32)
     set(CMAKE_ASM_NASM_OBJECT_FORMAT win64)
@@ -29,18 +29,5 @@ enable_language(ASM_NASM)
 set_source_files_properties("vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm" "vectorize sse42.asm" "vectorize sse2.asm" PROPERTIES LANGUAGE ASM_NASM)
 
 # Add source to this project's executable
-add_executable (vectorize_example "main.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm") #
+add_executable (vectorize_example "main.c" "vectorize.c") #
 target_include_directories(vectorize_example PUBLIC "include")
-
-# Add source to the disassembler
-add_executable (vectorize_disassembler "disassemble.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm")
-target_include_directories(vectorize_disassembler PUBLIC "include")
-
-
-# Add source to the tester
-add_executable (vectorize_test "vectorize test.c" "vectorize.c" "vectorize sse42.asm" "vectorize sse2.asm" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm")
-target_include_directories(vectorize_test PUBLIC "include")
-
-# Add source to this project's library
-add_library (vectorize SHARED "vectorize.c" "vectorize avx512.asm" "vectorize avx2.asm" "vectorize avx.asm" "vectorize sse42.asm" "vectorize sse2.asm")
-target_include_directories(vectorize PUBLIC include include/vectorize)
