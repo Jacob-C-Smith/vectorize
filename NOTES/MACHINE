@@ -1,0 +1,35 @@
+Q. How does the machine work step by step? 
+A. 
+ 1. Load EDY program file from the file system
+ 2. Bind input EDY buffer files with mmap 
+ 3. Create a new file for output, and bind it with mmap
+ 4. Analyze source code to determine how buffers should be loded. *
+ 5. Compile EDY program into machine code with JIT
+  5.1. Determine types of inputs, outputs, and computations
+   5.1.1. Determine the type of each input buffer
+   5.1.2. Determine which data type will be used for computations
+   5.1.3. Determine the type of each output buffer
+  5.2. Generate machine code from source code
+   5.2.1. Generate instructions to convert each input stream into the computation type
+   5.2.2 Generate instructions starting from entry
+    5.2.2.X TODO: This is where most of the complexity of the code generation will be
+   5.2.3 Generate instructions to convert program output to the output type
+   5.2.4 Generate instrucitons to nontemporally store output results into memory mapped output file.
+ 6. Begin program execution
+  6.1. Check continuation condition
+   6.1.1 Check the fence condition
+  6.2. Prefetch next buffer contents
+  6.3. Run the program on the current buffer contents
+
+
+* For instance, if a value is only used one time in the program, the JIT could generate an instruction that loads said value from memory. In other words, mem -> operation vs mem -> register -> operation. If a value is used several times, which will often be the case, the value will be loaded into its own register. The JIT must keep track of which (x/y/z)mmN corresponds to which vector elements.
+
+Q. How to best optimize code generation
+A.
+ Intel optimization reference manual chapters
+  03 - General Optimization Guidelines
+  09 - Optimizing Cache Usage
+  13 - 64-bit Coding Guidelines
+  14 - SSE4.2 and SIMD Programming for Text-Processing/Lexing/Parsing
+  15 - Optimizations for AVX, FMA, and AVX2
+  18 - Software optimization for AVX-512 instructions
